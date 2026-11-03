@@ -27,7 +27,7 @@ public class OrderValidator
         {
             order.Status = OrderStatus.Rejected;
             order.FailureReason = $"Customer #{order.CustomerId} not found";
-           // await _orderRepo.SaveAsync(order, ct);
+            await _orderRepo.SaveAsync(order, ct);
             Log.Error(ClassName, order.FailureReason);
             return false;
         }
@@ -35,7 +35,7 @@ public class OrderValidator
         {
             order.Status = OrderStatus.Rejected;
             order.FailureReason = "Customer is inactive";
-            //await _orderRepo.SaveAsync(order, ct);
+            await _orderRepo.SaveAsync(order, ct);
             Log.Error(ClassName, order.FailureReason);
             return false;
         }
@@ -49,7 +49,7 @@ public class OrderValidator
                 {
                     order.Status = OrderStatus.Rejected;
                     order.FailureReason = $"Product #{item.ProductId} not found";
-                   // await _orderRepo.SaveAsync(order, ct);
+                   await _orderRepo.SaveAsync(order, ct);
                     Log.Error(ClassName, order.FailureReason);
                     return false;
                 }
@@ -57,7 +57,7 @@ public class OrderValidator
                 {
                 order.Status = OrderStatus.Rejected;
                 order.FailureReason = $"Insufficient stock for '{product.Name}'";
-                //await _orderRepo.SaveAsync(order, ct);
+                await _orderRepo.SaveAsync(order, ct);
                 Log.Error(ClassName, order.FailureReason);
                 return false;
                 }
@@ -71,7 +71,7 @@ public class OrderValidator
             {
                 order.Status = OrderStatus.Rejected;
                 order.FailureReason = $"Coupon '{order.CouponCode}' does not exist";
-               // await _orderRepo.SaveAsync(order, ct);
+                await _orderRepo.SaveAsync(order, ct);
                 Log.Error(ClassName, order.FailureReason);
                 return false;
             }
@@ -80,14 +80,14 @@ public class OrderValidator
             {
                 order.Status = OrderStatus.Rejected;
                 order.FailureReason = $"Coupon '{order.CouponCode}' has expired";
-                //await _orderRepo.SaveAsync(order, ct);
+                await _orderRepo.SaveAsync(order, ct);
                 Log.Error(ClassName, order.FailureReason);
                 return false;
             }
         }
         order.Status = OrderStatus.Validated;
         order.FailureReason = null;
-        //await _orderRepo.SaveAsync(order, ct);
+        await _orderRepo.SaveAsync(order, ct);
         Log.Success(ClassName, $"Order #{order.Id} validated successfully.");
         return true;
     }
