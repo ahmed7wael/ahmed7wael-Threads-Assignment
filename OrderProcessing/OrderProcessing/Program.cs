@@ -13,100 +13,100 @@ using System.Threading.Tasks;
 // =========================================================================
 // === PHASE 1 (Commented Out) =============================================
 // =========================================================================
-/*
-var jsonFileStore = new JsonFileStore();
-var runner = new Phase1Runner(jsonFileStore);
-await runner.RunAsync();
-Console.WriteLine("\nPress any key to exit...");
-Console.ReadKey();
 
-var inventoryService = new InventoryService(jsonFileStore);
-int p4ProductId = 4;
-await RaceConditionDemo.RunAsync(inventoryService, jsonFileStore, p4ProductId);
-*/
+//var jsonFileStore = new JsonFileStore();
+//var runner = new Phase1Runner(jsonFileStore);
+//await runner.RunAsync();
+//Console.WriteLine("\nPress any key to exit...");
+//Console.ReadKey();
+
+//var inventoryService = new InventoryService(jsonFileStore);
+//int p4ProductId = 4;
+//await RaceConditionDemo.RunAsync(inventoryService, jsonFileStore, p4ProductId);
+
 
 // =========================================================================
 // === PHASE 2 (Commented Out) =============================================
 // =========================================================================
-/*
-var jsonFileStore = new JsonFileStore();
-var inventoryService = new InventoryService(jsonFileStore);
-var productRepository = new ProductRepository(jsonFileStore);
-var customerRepository = new CustomerRepository(jsonFileStore);
-var couponRepository = new CouponRepository(jsonFileStore);
-var orderRepository = new OrderRepository(jsonFileStore);
-var dataSeeder = new DataSeeder(jsonFileStore);
-var pricingService = new PricingService(productRepository, customerRepository, couponRepository, null);
-var invoiceGenerator = new InvoiceGenerator();
-var orderValidator = new OrderValidator(customerRepository, productRepository, couponRepository, orderRepository);
-var orderProcessorV2 = new OrderProcessorV2(inventoryService, pricingService, orderRepository, productRepository, invoiceGenerator);
-var phase2Runner = new Phase2Runner(
-    jsonFileStore,
-    dataSeeder,
-    inventoryService,
-    pricingService,
-    orderProcessorV2,
-    orderValidator,
-    orderRepository
-);
-var cts = new CancellationTokenSource();
-await phase2Runner.RunAsync(cts.Token);
-Console.WriteLine("\nPress any key to exit...");
-Console.ReadKey();
-*/
+
+//var jsonFileStore = new JsonFileStore();
+//var inventoryService = new InventoryService(jsonFileStore);
+//var productRepository = new ProductRepository(jsonFileStore);
+//var customerRepository = new CustomerRepository(jsonFileStore);
+//var couponRepository = new CouponRepository(jsonFileStore);
+//var orderRepository = new OrderRepository(jsonFileStore);
+//var dataSeeder = new DataSeeder(jsonFileStore);
+//var pricingService = new PricingService(productRepository, customerRepository, couponRepository, null);
+//var invoiceGenerator = new InvoiceGenerator();
+//var orderValidator = new OrderValidator(customerRepository, productRepository, couponRepository, orderRepository);
+//var orderProcessorV2 = new OrderProcessorV2(inventoryService, pricingService, orderRepository, productRepository, invoiceGenerator);
+//var phase2Runner = new Phase2Runner(
+//    jsonFileStore,
+//    dataSeeder,
+//    inventoryService,
+//    pricingService,
+//    orderProcessorV2,
+//    orderValidator,
+//    orderRepository
+//);
+//var cts = new CancellationTokenSource();
+//await phase2Runner.RunAsync(cts.Token);
+//Console.WriteLine("\nPress any key to exit...");
+//Console.ReadKey();
+
 
 // =========================================================================
 // === PHASE 3: Sync vs Async Performance Comparison (Commented Out) =======
 // =========================================================================
-/*
-Console.WriteLine("\n=== PHASE 3: Performance Benchmark (Sync vs Async) ===");
-var dataStore = new JsonFileStore();
-var dataSeeder = new DataSeeder(dataStore);
-dataSeeder.ResetSync();
 
-var timeoutIds = new List<int> { 5 };
-var declinedIds = new List<int> { 8 };
-var failAttempts = new Dictionary<int, int> { { 3, 2 }, { 17, 4 } };
+//Console.WriteLine("\n=== PHASE 3: Performance Benchmark (Sync vs Async) ===");
+//var dataStore = new JsonFileStore();
+//var dataSeeder = new DataSeeder(dataStore);
+//dataSeeder.ResetSync();
 
-var asyncCustomerRepo = new CustomerRepository(dataStore);
-var asyncProductRepo = new ProductRepository(dataStore);
-var asyncCouponRepo = new CouponRepository(dataStore);
-var asyncOrderRepo = new OrderRepository(dataStore);
-var customerServiceAsync = new CustomerService(asyncCustomerRepo);
-var inventoryServiceAsync = new InventoryService(dataStore);
-var pricingServiceAsync = new PricingService(asyncProductRepo, asyncCustomerRepo, asyncCouponRepo, null);
-var paymentGatewayAsync = new PaymentGateway(dataStore, timeoutIds, declinedIds);
-var emailServiceAsync = new EmailService(dataStore, failAttempts);
-var asyncProcessor = new OrderProcessor(
-    customerServiceAsync,
-    inventoryServiceAsync,
-    pricingServiceAsync,
-    paymentGatewayAsync,
-    asyncOrderRepo,
-    emailServiceAsync
-);
+//var timeoutIds = new List<int> { 5 };
+//var declinedIds = new List<int> { 8 };
+//var failAttempts = new Dictionary<int, int> { { 3, 2 }, { 17, 4 } };
 
-var syncOrderRepo = new SyncOrderRepository(dataStore);
-var customerServiceSync = new CustomerService(asyncCustomerRepo);
-var inventoryServiceSync = new InventoryService(dataStore);
-var pricingServiceSync = new PricingService(asyncProductRepo, asyncCustomerRepo, asyncCouponRepo, null);
-var paymentGatewaySync = new PaymentGateway(dataStore, timeoutIds, declinedIds);
-var emailServiceSync = new EmailService(dataStore, failAttempts);
-var syncProcessor = new SyncOrderProcessor(
-    customerServiceSync,
-    inventoryServiceSync,
-    pricingServiceSync,
-    paymentGatewaySync,
-    syncOrderRepo,
-    emailServiceSync
-);
+//var asyncCustomerRepo = new CustomerRepository(dataStore);
+//var asyncProductRepo = new ProductRepository(dataStore);
+//var asyncCouponRepo = new CouponRepository(dataStore);
+//var asyncOrderRepo = new OrderRepository(dataStore);
+//var customerServiceAsync = new CustomerService(asyncCustomerRepo);
+//var inventoryServiceAsync = new InventoryService(dataStore);
+//var pricingServiceAsync = new PricingService(asyncProductRepo, asyncCustomerRepo, asyncCouponRepo, null);
+//var paymentGatewayAsync = new PaymentGateway(dataStore, timeoutIds, declinedIds);
+//var emailServiceAsync = new EmailService(dataStore, failAttempts);
+//var asyncProcessor = new OrderProcessor(
+//    customerServiceAsync,
+//    inventoryServiceAsync,
+//    pricingServiceAsync,
+//    paymentGatewayAsync,
+//    asyncOrderRepo,
+//    emailServiceAsync
+//);
 
-Console.WriteLine("Starting Phase 3 Performance Comparison (Sync vs Async)...");
-await Phase3Runner.RunComparisonAsync(dataSeeder, dataStore, syncProcessor, asyncProcessor);
-await Phase3Runner.VerifyEndStateAsync(dataStore);
-Console.WriteLine("\nPress any key to exit...");
-Console.ReadKey();
-*/
+//var syncOrderRepo = new SyncOrderRepository(dataStore);
+//var customerServiceSync = new CustomerService(asyncCustomerRepo);
+//var inventoryServiceSync = new InventoryService(dataStore);
+//var pricingServiceSync = new PricingService(asyncProductRepo, asyncCustomerRepo, asyncCouponRepo, null);
+//var paymentGatewaySync = new PaymentGateway(dataStore, timeoutIds, declinedIds);
+//var emailServiceSync = new EmailService(dataStore, failAttempts);
+//var syncProcessor = new SyncOrderProcessor(
+//    customerServiceSync,
+//    inventoryServiceSync,
+//    pricingServiceSync,
+//    paymentGatewaySync,
+//    syncOrderRepo,
+//    emailServiceSync
+//);
+
+//Console.WriteLine("Starting Phase 3 Performance Comparison (Sync vs Async)...");
+//await Phase3Runner.RunComparisonAsync(dataSeeder, dataStore, syncProcessor, asyncProcessor);
+//await Phase3Runner.VerifyEndStateAsync(dataStore);
+//Console.WriteLine("\nPress any key to exit...");
+//Console.ReadKey();
+
 
 // =========================================================================
 // === PHASE 4: Scale-Up ===================================================
