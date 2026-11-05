@@ -37,4 +37,29 @@ public  class CustomerRepository
         Log.Info(ClassName, $"Customer #{id} not found");
         return null;
     }
+    public Customer? GetById(int id)
+    {
+        Log.Info(ClassName, "Opening connection...");
+        Thread.Sleep(200);
+
+        int QuaryDelay = Random.Shared.Next(300, 601);
+        Log.Info(ClassName, $"Executing query for Customer #{id}...");
+        Thread.Sleep(QuaryDelay);
+
+        var customers = _jsonFileStore.Read<Customer>(DataFiles.customers);
+
+        if (customers != null)
+        {
+            foreach (var customer in customers)
+            {
+                if (customer.Id == id)
+                {
+                    Log.Success(ClassName, $"Customer #{id} found ({customer.Name})");
+                    return customer;
+                }
+            }
+        }
+        Log.Info(ClassName, $"Customer #{id} not found");
+        return null;
+    }
 }

@@ -10,5 +10,6 @@ public enum OrderStatus
     Rejected,
     PaymentFailed,
     Completed,
-    Failed
+    Failed,
+    Cancelled
 }

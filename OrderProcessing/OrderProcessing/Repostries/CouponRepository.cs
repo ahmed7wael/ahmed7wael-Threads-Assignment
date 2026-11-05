@@ -1,5 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
-using OrderProcessing.Classes;
+﻿using OrderProcessing.Classes;
 
 namespace OrderProcessing.Repostries;
 
@@ -12,6 +11,33 @@ public class CouponRepository
     {
         _jsonFileStore = jsonFileStore;
     }
+
+    // تمت إضافة الدالة المتزامنة هنا لكي تتوافق مع PricingService وتمنع خطأ CS1061
+    public Coupon? GetByCode(string code)
+    {
+        Log.Info(ClassName, "Opening connection...");
+        Thread.Sleep(200);
+
+        int queryDelay = Random.Shared.Next(300, 601);
+        Log.Info(ClassName, $"Executing query for Coupon '{code}'...");
+        Thread.Sleep(queryDelay);
+
+        var coupons = _jsonFileStore.Read<Coupon>(DataFiles.coupons);
+        if (coupons != null)
+        {
+            foreach (var coupon in coupons)
+            {
+                if (string.Equals(coupon.Code, code, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log.Success(ClassName, $"Coupon '{code}' found.");
+                    return coupon;
+                }
+            }
+        }
+        Log.Info(ClassName, $"Coupon '{code}' not found.");
+        return null;
+    }
+
     public async Task<Coupon?> GetByCodeAsync(string code, CancellationToken ct = default)
     {
         Log.Info(ClassName, "Opening connection...");
@@ -22,11 +48,11 @@ public class CouponRepository
         await Task.Delay(quaryDelay, ct);
 
         var coupons = await _jsonFileStore.ReadAsync<Coupon>(DataFiles.coupons, ct);
-        if(coupons != null)
+        if (coupons != null)
         {
-            foreach(var coupon in coupons)
+            foreach (var coupon in coupons)
             {
-                if(string.Equals(coupon.Code , code , StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(coupon.Code, code, StringComparison.OrdinalIgnoreCase))
                 {
                     Log.Success(ClassName, $"Coupon '{code}' found.");
                     return coupon;
