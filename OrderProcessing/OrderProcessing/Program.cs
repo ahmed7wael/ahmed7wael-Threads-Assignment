@@ -1,9 +1,12 @@
 ﻿using OrderProcessing;
 using OrderProcessing.Classes;
+using OrderProcessing.Custom_Exptions;
 using OrderProcessing.interfaces;
 using OrderProcessing.Repostries;
 using OrderProcessing.Services;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,20 +56,18 @@ Console.ReadKey();
 */
 
 // =========================================================================
-// === PHASE 3: Sync vs Async Performance Comparison (Active) ==============
+// === PHASE 3: Sync vs Async Performance Comparison (Commented Out) =======
 // =========================================================================
+/*
 Console.WriteLine("\n=== PHASE 3: Performance Benchmark (Sync vs Async) ===");
-
 var dataStore = new JsonFileStore();
 var dataSeeder = new DataSeeder(dataStore);
 dataSeeder.ResetSync();
 
-// تمرير الـ IDs الصحيحة مطابقة للجدول
-var timeoutIds = new List<int> { 5 };       // الأوردر رقم 5 يحصل له Timeout
-var declinedIds = new List<int> { 8 };      // الأوردر رقم 8 يحصل له Decline
-var failAttempts = new Dictionary<int, int> { { 3, 2 }, { 17, 4 } }; // #3 يفشل مرتين وينجح الثالثة، #17 يفشل 4 مرات ويدخل الـ retry
+var timeoutIds = new List<int> { 5 };
+var declinedIds = new List<int> { 8 };
+var failAttempts = new Dictionary<int, int> { { 3, 2 }, { 17, 4 } };
 
-// --- 1. Async Repositories & Services ---
 var asyncCustomerRepo = new CustomerRepository(dataStore);
 var asyncProductRepo = new ProductRepository(dataStore);
 var asyncCouponRepo = new CouponRepository(dataStore);
@@ -74,7 +75,6 @@ var asyncOrderRepo = new OrderRepository(dataStore);
 var customerServiceAsync = new CustomerService(asyncCustomerRepo);
 var inventoryServiceAsync = new InventoryService(dataStore);
 var pricingServiceAsync = new PricingService(asyncProductRepo, asyncCustomerRepo, asyncCouponRepo, null);
-
 var paymentGatewayAsync = new PaymentGateway(dataStore, timeoutIds, declinedIds);
 var emailServiceAsync = new EmailService(dataStore, failAttempts);
 var asyncProcessor = new OrderProcessor(
@@ -86,12 +86,10 @@ var asyncProcessor = new OrderProcessor(
     emailServiceAsync
 );
 
-// --- 2. Sync Repositories & Services ---
 var syncOrderRepo = new SyncOrderRepository(dataStore);
 var customerServiceSync = new CustomerService(asyncCustomerRepo);
 var inventoryServiceSync = new InventoryService(dataStore);
 var pricingServiceSync = new PricingService(asyncProductRepo, asyncCustomerRepo, asyncCouponRepo, null);
-
 var paymentGatewaySync = new PaymentGateway(dataStore, timeoutIds, declinedIds);
 var emailServiceSync = new EmailService(dataStore, failAttempts);
 var syncProcessor = new SyncOrderProcessor(
@@ -104,18 +102,152 @@ var syncProcessor = new SyncOrderProcessor(
 );
 
 Console.WriteLine("Starting Phase 3 Performance Comparison (Sync vs Async)...");
-
-// Run Benchmark & Verification
 await Phase3Runner.RunComparisonAsync(dataSeeder, dataStore, syncProcessor, asyncProcessor);
 await Phase3Runner.VerifyEndStateAsync(dataStore);
+Console.WriteLine("\nPress any key to exit...");
+Console.ReadKey();
+*/
+
+// =========================================================================
+// === PHASE 4: Scale-Up ===================================================
+// =========================================================================
+
+Console.WriteLine("\n=== PHASE 4: Scale-Up Execution ===");
+var dataStore = new JsonFileStore();
+var dataSeeder = new DataSeeder(dataStore);
+
+var customerRepo = new CustomerRepository(dataStore);
+var productRepo = new ProductRepository(dataStore);
+var couponRepo = new CouponRepository(dataStore);
+var orderRepo = new OrderRepository(dataStore);
+var incomingOrderRepo = new IncomingOrderRepository(dataStore);
+
+var customerService = new CustomerService(customerRepo);
+var inventoryService = new InventoryService(dataStore);
+var pricingService = new PricingService(productRepo, customerRepo, couponRepo, null);
+
+var timeoutIds = new List<int> { 5 };
+var declinedIds = new List<int> { 8 };
+var failAttempts = new Dictionary<int, int> { { 3, 2 }, { 17, 4 } };
+
+var paymentGateway = new PaymentGateway(dataStore, timeoutIds, declinedIds);
+var emailService = new EmailService(dataStore, failAttempts);
+
+var orderProcessor = new OrderProcessor(
+    customerService,
+    inventoryService,
+    pricingService,
+    paymentGateway,
+    orderRepo,
+    emailService
+);
+
+// 1. Run Task 10.1 & Automatically triggers Task 10.4 inside Phase4Runner
+var phase4Runner = new Phase4Runner(dataSeeder, orderProcessor, incomingOrderRepo, dataStore);
+await phase4Runner.RunAsync();
+
+// 2. Run Task 10.2 — Customer Dashboard Execution
+Console.WriteLine("\n=== PHASE 4: Customer Dashboard (Task 10.2) ===");
+var dashboardService = new CustomerDashboardService(
+    customerRepo,
+    orderRepo,
+    dataStore,
+    failPaymentsForCustomerIds: new[] { 99 }
+);
+
+Console.WriteLine("\n--- Testing Customer #3 ---");
+var sw = Stopwatch.StartNew();
+try
+{
+    var dashboard = await dashboardService.LoadAsync(3);
+    sw.Stop();
+
+    var ordersList = new List<string>();
+    foreach (var o in dashboard.Orders)
+    {
+        ordersList.Add($"#{o.Id} {o.Status}");
+    }
+    string ordersText = string.Join(", ", ordersList);
+
+    var paymentsList = new List<string>();
+    foreach (var p in dashboard.Payments)
+    {
+        paymentsList.Add($"#{p.OrderId} {p.Status}");
+    }
+    string paymentsText = string.Join(", ", paymentsList);
+
+    var emailsList = new List<string>();
+    foreach (var e in dashboard.Emails)
+    {
+        emailsList.Add($"#{e.OrderId}");
+    }
+    string emailsText = string.Join(", ", emailsList);
+
+    Console.WriteLine($"{dashboard.Customer.Name} — {dashboard.Orders.Count} orders ({ordersText}), {dashboard.Payments.Count} payments ({paymentsText}), {dashboard.Emails.Count} email ({emailsText})");
+    Console.WriteLine($"Total load time: {sw.ElapsedMilliseconds} ms");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+}
+
+Console.WriteLine("\n--- Testing Customer #99 ---");
+try
+{
+    await dashboardService.LoadAsync(99);
+}
+catch (AggregateException ex)
+{
+    var errorMessages = new List<string>();
+    foreach (var innerEx in ex.InnerExceptions)
+    {
+        errorMessages.Add(innerEx.Message);
+    }
+    Console.WriteLine($"two failures printed: {string.Join(" and ", errorMessages)}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Failure printed: {ex.Message}");
+}
+
+// 3. Run Task 10.3 — Fastest Shipping Quote Execution
+Console.WriteLine("\n=== PHASE 4: Fastest Shipping Quote (Task 10.3) ===");
+var carriers = new List<IShippingCarrier>
+{
+    new FastShip(),
+    new CairoExpress(failForOrderIds: new[] { 6 }),
+    new NileCourier()
+};
+
+var quoteService = new ShippingQuoteService(carriers);
+decimal baseShippingCost = 50.00m;
+
+for (int i = 1; i <= 5; i++)
+{
+    var dummyOrder = new Order { Id = i };
+    Console.WriteLine($"\n--- Testing Order #{i} ---");
+    try
+    {
+        var (quote, cancelled) = await quoteService.GetFastestQuoteAsync(dummyOrder, baseShippingCost);
+        string cancelledText = cancelled.Count > 0 ? string.Join(", ", cancelled) : "None";
+        Console.WriteLine($"Order #{i} -> Winner: {quote.Carrier}, Price: {quote.Price:F2}, Time: {quote.ElapsedMs} ms, Cancelled: [{cancelledText}]");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Order #{i} Failed: {ex.Message}");
+    }
+}
+
+Console.WriteLine("\n--- Testing Order #6 (All Carriers Should Fail) ---");
+try
+{
+    var failingOrder = new Order { Id = 6 };
+    await quoteService.GetFastestQuoteAsync(failingOrder, baseShippingCost);
+}
+catch (ShippingProviderUnavailableException ex)
+{
+    Console.WriteLine($"Caught expected exception: {ex.Message}");
+}
 
 Console.WriteLine("\nPress any key to exit...");
 Console.ReadKey();
-Console.WriteLine("\n--- Testing Task 9.7 ---");
-var sampleOrder = new Order { Id = 99, CustomerId = 1 };
-var sampleCustomer = new Customer { Id = 1, Name = "Test Customer", Email = "test@mail.com", IsActive = true }; ;
-await asyncProcessor.ProcessOrderAsync(sampleOrder, sampleCustomer);
-Console.WriteLine("\n--- solved ---");
-var sampleOrder1 = new Order { Id = 99, CustomerId = 1 };
-var sampleCustomer1 = new Customer { Id = 1, Name = "Test Customer", Email = "test@mail.com", IsActive = true }; ;
-await asyncProcessor.ProcessOrderAsync(sampleOrder1, sampleCustomer1);
